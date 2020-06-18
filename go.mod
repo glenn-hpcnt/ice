@@ -3,6 +3,8 @@ module github.com/pion/ice
 go 1.13
 
 require (
+	github.com/chyeh/pubip v0.0.0-20170203095919-b7e679cf541c
+	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/pion/dtls/v2 v2.0.1
 	github.com/pion/logging v0.2.2
 	github.com/pion/mdns v0.0.4

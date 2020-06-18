@@ -10,6 +10,7 @@ import (
 	"github.com/pion/logging"
 	"github.com/pion/stun"
 	"github.com/pion/transport/vnet"
+	"github.com/chyeh/pubip"
 )
 
 type atomicError struct{ v atomic.Value }
@@ -206,6 +207,9 @@ func localInterfaces(vnet *vnet.Net, interfaceFilter func(string) bool, networkT
 
 			ips = append(ips, ip)
 		}
+	}
+	if ip, err := pubip.Get(); err == nil {
+		ips = append(ips, ip)
 	}
 	return ips, nil
 }
