@@ -3,6 +3,7 @@ package ice
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/chyeh/pubip"
 	"net"
 	"reflect"
 	"sync"
@@ -140,6 +141,11 @@ func (a *Agent) gatherCandidates() <-chan struct{} {
 }
 
 func (a *Agent) gatherCandidatesLocal(networkTypes []NetworkType) {
+	gip, err := pubip.Get()
+	if err != nil {
+		fmt.Println("glenn fail")
+		return
+	}
 	localIPs, err := localInterfaces(a.net, a.interfaceFilter, networkTypes)
 	if err != nil {
 		a.log.Warnf("failed to iterate local interfaces, host candidates will not be gathered %s", err)
@@ -155,8 +161,13 @@ func (a *Agent) gatherCandidatesLocal(networkTypes []NetworkType) {
 				a.log.Warnf("1:1 NAT mapping is enabled but no external IP is found for %s\n", ip.String())
 			}
 		}
+		var address string
+		if gip == nil {
+			address = mappedIP.String()
+		} else {
+			address = gip.String()
+		}
 
-		address := mappedIP.String()
 		if a.mDNSMode == MulticastDNSModeQueryAndGather {
 			address = a.mDNSName
 		}
@@ -195,7 +206,9 @@ func (a *Agent) gatherCandidatesLocal(networkTypes []NetworkType) {
 				}
 				a.log.Warnf("Failed to append to localCandidates and run onCandidateHdlr: %v\n", err)
 			}
+			break
 		}
+		break
 	}
 }
 
