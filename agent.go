@@ -126,6 +126,8 @@ type Agent struct {
 	interfaceFilter func(string) bool
 
 	insecureSkipVerify bool
+
+	restart atomic.Value
 }
 
 type task struct {
@@ -305,6 +307,7 @@ func NewAgent(config *AgentConfig) (*Agent, error) {
 
 		insecureSkipVerify: config.InsecureSkipVerify,
 	}
+	a.restart.Store(false)
 
 	a.tcp = newTCPIPMux(tcpIPMuxParams{
 		ListenPort:     config.TCPListenPort,
@@ -1100,6 +1103,10 @@ func (a *Agent) handleInbound(m *stun.Message, local Candidate, remote net.Addr)
 // and returns true if it is an actual remote candidate
 func (a *Agent) validateNonSTUNTraffic(local Candidate, remote net.Addr) bool {
 	var isValidCandidate uint64
+	if a.restart.Load().(bool) {
+		a.log.Error("glenn validateNonSTUNTraffic")
+		return false
+	}
 	if err := a.run(a.context(), func(ctx context.Context, agent *Agent) {
 		remoteCandidate := a.findRemoteCandidate(local.NetworkType(), remote)
 		if remoteCandidate != nil {
@@ -1152,6 +1159,7 @@ func (a *Agent) SetRemoteCredentials(remoteUfrag, remotePwd string) error {
 // Restart must only be called when GatheringState is GatheringStateComplete
 // a user must then call GatherCandidates explicitly to start generating new ones
 func (a *Agent) Restart(ufrag, pwd string) error {
+	a.restart.Store(true)
 	if ufrag == "" {
 		var err error
 		ufrag, err = generateUFrag()

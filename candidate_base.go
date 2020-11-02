@@ -119,11 +119,14 @@ func (c *candidateBase) start(a *Agent, conn net.PacketConn, initializedCh <-cha
 func (c *candidateBase) recvLoop(initializedCh <-chan struct{}) {
 	defer func() {
 		close(c.closedCh)
+		c.agent().log.Errorf("glenn recvloop defer called %s", c.id)
 	}()
-
+	c.agent().log.Errorf("glenn recvloop start %s %s", c.id, c.conn)
 	select {
 	case <-initializedCh:
+		c.agent().log.Errorf("glenn recvloop initializedCh %s %s", c.id, c.conn)
 	case <-c.closeCh:
+		c.agent().log.Errorf("glenn recvloop closeCh %s %s", c.id, c.conn)
 		return
 	}
 
@@ -132,14 +135,16 @@ func (c *candidateBase) recvLoop(initializedCh <-chan struct{}) {
 	for {
 		n, srcAddr, err := c.conn.ReadFrom(buffer)
 		if err != nil {
+			c.agent().log.Errorf("glenn recvloop connection closed %s %s", c.id, c.conn)
 			return
 		}
-
 		handleInboundCandidateMsg(c, c, buffer[:n], srcAddr, log)
 	}
 }
 
 func handleInboundCandidateMsg(ctx context.Context, c Candidate, buffer []byte, srcAddr net.Addr, log logging.LeveledLogger) {
+	defer c.agent().log.Errorf("glenn handleInboundCandidateMsg end %s", c.ID())
+	c.agent().log.Errorf("glenn handleInboundCandidateMsg start %s", c.ID())
 	if stun.IsMessage(buffer) {
 		m := &stun.Message{
 			Raw: make([]byte, len(buffer)),
@@ -194,6 +199,7 @@ func (c *candidateBase) close() error {
 	}
 
 	// Close the conn
+	c.agent().log.Errorf("glenn c.conn.Close() %s, %s", c.id, c.conn)
 	if err := c.conn.Close(); err != nil && firstErr == nil {
 		firstErr = err
 	}
@@ -203,8 +209,9 @@ func (c *candidateBase) close() error {
 	}
 
 	// Wait until the recvLoop is closed
+	c.agent().log.Errorf("glenn closedCh start %s, %s", c.id, c.conn)
 	<-c.closedCh
-
+	c.agent().log.Errorf("glenn closedCh end %s", c.id)
 	return nil
 }
 

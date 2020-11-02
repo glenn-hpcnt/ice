@@ -212,7 +212,7 @@ func (a *Agent) gatherCandidatesLocal(ctx context.Context, networkTypes []Networ
 					continue
 				}
 			}
-
+			a.log.Errorf("glenn local add candidate start, %s", c.id)
 			if err := a.addCandidate(ctx, c, conn); err != nil {
 				if closeErr := c.close(); closeErr != nil {
 					a.log.Warnf("Failed to close candidate: %v", closeErr)
@@ -266,7 +266,7 @@ func (a *Agent) gatherCandidatesSrflxMapped(ctx context.Context, networkTypes []
 					err))
 				return
 			}
-
+			a.log.Errorf("glenn sflrx map add candidate start, %!s", c)
 			if err := a.addCandidate(ctx, c, conn); err != nil {
 				if closeErr := c.close(); closeErr != nil {
 					a.log.Warnf("Failed to close candidate: %v", closeErr)
@@ -326,7 +326,7 @@ func (a *Agent) gatherCandidatesSrflx(ctx context.Context, urls []*URL, networkT
 					closeConnAndLog(conn, a.log, fmt.Sprintf("Failed to create server reflexive candidate: %s %s %d: %v\n", network, ip, port, err))
 					return
 				}
-
+				a.log.Errorf("glenn srflx add candidate start, %!s", c)
 				if err := a.addCandidate(ctx, c, conn); err != nil {
 					if closeErr := c.close(); closeErr != nil {
 						a.log.Warnf("Failed to close candidate: %v", closeErr)
@@ -477,7 +477,7 @@ func (a *Agent) gatherCandidatesRelay(ctx context.Context, urls []*URL) {
 				closeConnAndLog(locConn, a.log, fmt.Sprintf("Failed to create relay candidate: %s %s: %v\n", network, raddr.String(), err))
 				return
 			}
-
+			a.log.Errorf("glenn relay add candidate start, %!s", candidate)
 			if err := a.addCandidate(ctx, candidate, relayConn); err != nil {
 				relayConnClose()
 
